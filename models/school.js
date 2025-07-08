@@ -1,0 +1,41 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+
+const School = sequelize.define("School", {
+  schoolName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  schoolType: {
+    type: DataTypes.ENUM("Primary", "Secondary", "University"),
+    allowNull: false,
+  },
+  schoolAddress: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  schoolPhone: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      is: /^\+?[1-9]\d{1,14}$/, // Validates international phone numbers
+    },
+  },
+  schoolEmail: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
+  },
+    schoolLogo: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+        isUrl: true, // Validates that the logo is a valid URL
+        },
+    },
+});
+
+module.exports = School;
