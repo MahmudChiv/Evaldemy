@@ -20,7 +20,7 @@ exports.registerSchool = async (req, res) => {
     schoolEmail,
     schoolLogo,
   } = req.body;
-  // Validate required fields
+  
   if (
     !schoolName ||
     !schoolType ||
@@ -39,7 +39,7 @@ exports.registerSchool = async (req, res) => {
     return res.status(400).json({ message: "School already exists" });
 
   const newSchool = await School.create({
-    id: UUID.v4(), // Generate a unique ID for the school
+    id: UUID.v4(), 
     schoolName,
     schoolType,
     schoolAddress,
@@ -78,7 +78,7 @@ exports.registerAdmin = async (req, res) => {
 
   // Create the admin
   const newAdmin = await Admin.create({
-    id: UUID.v4(), // Generate a unique ID for the admin
+    id: UUID.v4(), 
     schoolId,
     adminName,
     adminEmail,
@@ -133,7 +133,7 @@ exports.inviteTeachers = async (req, res) => {
   const results = [];
   fs.createReadStream(req.file.path)
     .pipe(csv())
-    .on("data", (data) => results.push(data)) // push each row
+    .on("data", (data) => results.push(data))
     .on("end", async () => {
       try {
         for (const row of results) {
@@ -143,7 +143,7 @@ exports.inviteTeachers = async (req, res) => {
             symbols: true,
             uppercase: true,
             lowercase: true,
-            strict: true, // ensures at least one of each selected type
+            strict: true, 
           });
           // Hash the password before saving
           const hashedPassword = await bcrypt.hash(password, 10);
@@ -151,9 +151,9 @@ exports.inviteTeachers = async (req, res) => {
           console.log(hashedPassword);
 
           await Teacher.create({
-            id: UUID.v4(), // Generate a unique ID for the teacher
+            id: UUID.v4(),
             email: row.email,
-            password: hashedPassword, // Store the hashed password
+            password: hashedPassword,
           }).catch((error) => {
             console.error("Error saving teacher:", error);
             return res.status(500).send("Error saving teacher to DB");
@@ -162,7 +162,7 @@ exports.inviteTeachers = async (req, res) => {
           await sendLoginEmail(row.email, hashedPassword);
         }
 
-        await Teacher.sync(); // Ensure the Teacher model is synced with the database
+        await Teacher.sync();
         fs.unlinkSync(req.file.path); // Delete the uploaded file after processing
 
         res.status(201).send("Invites sent successfully");
@@ -199,7 +199,6 @@ exports.updateTeacherInfo = async (req, res) => {
       .json({ message: "Unauthorized, please login first" });
   }
   const { name, phone, password, confirmPassword } = req.body;
-  // Validate required fields
   if (!name || !phone || !password || !confirmPassword) {
     return res.status(400).json({ message: "All fields are required" });
   }
@@ -216,7 +215,7 @@ exports.updateTeacherInfo = async (req, res) => {
     }
     teacher.name = name;
     teacher.phone = phone;
-    teacher.password = hashedPassword; // Store the hashed password
+    teacher.password = hashedPassword;
     await teacher.save();
     return res.status(200).json({
       message: "Teacher information updated successfully",
@@ -229,7 +228,6 @@ exports.updateTeacherInfo = async (req, res) => {
       .json({ message: "Error updating teacher information" });
   }
 };
-// This function is used to set up the teacher's subjects and classes
 
 exports.teacherSubjectSetup = async (req, res) => {
   if (!req.user.id) {
@@ -245,7 +243,7 @@ exports.teacherSubjectSetup = async (req, res) => {
       .status(400)
       .json({ message: "Fill in your subject and its associated class" });
   }
-  // Validate pairs structure
+  
   if (
     !Array.isArray(pairs) ||
     !pairs.every((pair) => pair.subject && pair.class)
@@ -264,7 +262,7 @@ exports.teacherSubjectSetup = async (req, res) => {
     const subjectClassPairs = pairs.map((pair) => ({
       subject: pair.subject,
       class: pair.class,
-      teacherId: teacherId, // Associate the subject class with the teacher
+      teacherId: teacherId,
     }));
     await SubjectClass.bulkCreate(subjectClassPairs);
     return res.status(201).json({
