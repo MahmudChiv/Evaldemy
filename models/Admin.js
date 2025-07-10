@@ -10,7 +10,7 @@ const Admin = sequelize.define("Admin", {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'Schools', // Assuming the table name is 'Schools'
+            model: 'Schools', 
             key: 'id',
         },
     },
