@@ -42,4 +42,13 @@ const School = sequelize.define("School", {
     },
 });
 
+// Sync the model with the database
+School.sync()
+  .then(() => {
+    console.log("School table created successfully.");
+  })
+  .catch((error) => {
+    console.error("Error creating School table:", error);
+  });
+
 module.exports = School;
