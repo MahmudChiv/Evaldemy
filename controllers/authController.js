@@ -1,16 +1,15 @@
 const csv = require("csv-parser");
 const fs = require("fs");
-const School = require("../models/school");
-const Admin = require("../models/admin");
-const Teacher = require("../models/Teacher")
-const SubjectClass = require("../models/subjectClass");
+const School = require("../models/School");
+const Admin = require("../models/Admin");
+const Teacher = require("../models/Teacher");
+const SubjectClass = require("../models/SubjectClass");
 const bcrypt = require("bcryptjs");
 const sendLoginEmail = require("../utils/emailService").sendLoginEmail;
 require("dotenv").config();
 const generator = require("generate-password");
 const jwt = require("jsonwebtoken");
 const { UUID } = require("sequelize");
-
 
 exports.registerSchool = async (req, res) => {
   const {
@@ -34,7 +33,7 @@ exports.registerSchool = async (req, res) => {
   }
 
   const schoolExists = await School.findOne({
-    where: { schoolName: schoolName }
+    where: { schoolName: schoolName },
   });
   if (schoolExists)
     return res.status(400).json({ message: "School already exists" });
@@ -61,8 +60,7 @@ exports.registerSchool = async (req, res) => {
 };
 
 exports.registerAdmin = async (req, res) => {
-  const { schoolId, adminName, adminPassword, adminEmail } =
-    req.body;
+  const { schoolId, adminName, adminPassword, adminEmail } = req.body;
 
   // Validate required fields
   if (!schoolId || !adminName || !adminEmail || !adminPhone || !adminPassword) {
@@ -91,7 +89,7 @@ exports.registerAdmin = async (req, res) => {
   return res.status(201).json({
     message: "Admin registered successfully, please login to continue",
     admin: newAdmin,
-    school
+    school,
   });
 };
 
@@ -108,9 +106,13 @@ exports.handleAdminLogin = async (req, res) => {
   }
 
   // Implemet jwt
-  const token = jwt.sign({ id: admin.id, role: "admin" }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
+  const token = jwt.sign(
+    { id: admin.id, role: "admin" },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 
   return res.status(200).json({
     token, // Return the JWT token
@@ -120,8 +122,10 @@ exports.handleAdminLogin = async (req, res) => {
 };
 
 exports.inviteTeachers = async (req, res) => {
-  if(req.role !== "admin") {
-    return res.status(403).json({ message: "Access denied, you're not an admin!" });
+  if (req.role !== "admin") {
+    return res
+      .status(403)
+      .json({ message: "Access denied, you're not an admin!" });
   }
   if (!req.file) {
     return res.status(400).send("No file uploaded");
@@ -155,7 +159,7 @@ exports.inviteTeachers = async (req, res) => {
             return res.status(500).send("Error saving teacher to DB");
           });
           // Send login invite email to the teacher
-          await sendLoginEmail(row.email, hashedPassword)
+          await sendLoginEmail(row.email, hashedPassword);
         }
 
         await Teacher.sync(); // Ensure the Teacher model is synced with the database
@@ -178,9 +182,10 @@ exports.handleLogin = async (req, res) => {
   }
 
   try {
-    if (role === "teacher")  return await handleTeacherLogin(email, password, res);
-    else if (role === "student") return await handleStudentLogin(email, password, res);
-
+    if (role === "teacher")
+      return await handleTeacherLogin(email, password, res);
+    else if (role === "student")
+      return await handleStudentLogin(email, password, res);
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -188,8 +193,10 @@ exports.handleLogin = async (req, res) => {
 };
 
 exports.updateTeacherInfo = async (req, res) => {
-  if(!req.user.id) {  
-    return res.status(401).json({ message: "Unauthorized, please login first" });
+  if (!req.user.id) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized, please login first" });
   }
   const { name, phone, password, confirmPassword } = req.body;
   // Validate required fields
@@ -202,7 +209,7 @@ exports.updateTeacherInfo = async (req, res) => {
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
   // Update the teacher's details
-  try { 
+  try {
     const teacher = await Teacher.findByPk(req.user.id);
     if (!teacher) {
       return res.status(404).json({ message: "Teacher not found" });
@@ -217,36 +224,47 @@ exports.updateTeacherInfo = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating teacher information:", error);
-    return res.status(500).json({ message: "Error updating teacher information" });
+    return res
+      .status(500)
+      .json({ message: "Error updating teacher information" });
   }
 };
 // This function is used to set up the teacher's subjects and classes
 
 exports.teacherSubjectSetup = async (req, res) => {
-  if(!req.user.id) {
-    return res.status(401).json({ message: "Unauthorized, please login first" });
+  if (!req.user.id) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized, please login first" });
   }
   const teacherId = req.user.id;
   const pairs = req.body.pairs;
 
   if (!pairs || pairs.length === 0) {
-    return res.status(400).json({ message: "Fill in your subject and its associated class" });
+    return res
+      .status(400)
+      .json({ message: "Fill in your subject and its associated class" });
   }
   // Validate pairs structure
-  if (!Array.isArray(pairs) || !pairs.every(pair => pair.subject && pair.class)) {
+  if (
+    !Array.isArray(pairs) ||
+    !pairs.every((pair) => pair.subject && pair.class)
+  ) {
     return res.status(400).json({ message: "Invalid input" });
   }
   // Check if the teacher already has a setup
   const existingSetup = await SubjectClass.findAll({ where: { teacherId } });
   if (existingSetup.length > 0) {
-    return res.status(400).json({ message: "You have already set up your subjects and classes" });
+    return res
+      .status(400)
+      .json({ message: "You have already set up your subjects and classes" });
   }
 
   try {
-    const subjectClassPairs = pairs.map(pair => ({
+    const subjectClassPairs = pairs.map((pair) => ({
       subject: pair.subject,
       class: pair.class,
-      teacherId: teacherId, // Associate the subject class with the teacher 
+      teacherId: teacherId, // Associate the subject class with the teacher
     }));
     await SubjectClass.bulkCreate(subjectClassPairs);
     return res.status(201).json({
@@ -255,20 +273,22 @@ exports.teacherSubjectSetup = async (req, res) => {
     });
   } catch (error) {
     console.error("Error setting up subjects and classes:", error);
-    return res.status(500).json({ message: "Error setting up subjects and classes" });
+    return res
+      .status(500)
+      .json({ message: "Error setting up subjects and classes" });
   }
-}
-
+};
 
 exports.addStudents = async (req, res) => {
-  if(req.role !== "teacher") {
-    return res.status(403).json({ message: "Access denied, you're not a teacher!" });
+  if (req.role !== "teacher") {
+    return res
+      .status(403)
+      .json({ message: "Access denied, you're not a teacher!" });
   }
   if (!req.file) {
     return res.status(400).send("No file uploaded");
   }
-}
-
+};
 
 const handleTeacherLogin = async (email, password, res) => {
   const teacher = await Teacher.findOne({ where: { email } });
@@ -282,9 +302,13 @@ const handleTeacherLogin = async (email, password, res) => {
   }
 
   // Implement JWT for teacher login
-  const token = jwt.sign({ id: teacher.id, role: "teacher" }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
+  const token = jwt.sign(
+    { id: teacher.id, role: "teacher" },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 
   return res.status(200).json({
     token, // Return the JWT token
@@ -300,7 +324,6 @@ const handleStudentLogin = async (email, password, res) => {
     message: "Student login not implemented yet",
   });
 };
-
 
 // exports.getSchools = async (req, res) => {
 //   try {

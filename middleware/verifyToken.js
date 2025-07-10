@@ -1,6 +1,6 @@
 // verifyToken.js
 const jwt = require("jsonwebtoken");
-const Admin = require("../models/admin");
+const Admin = require("../models/Admin");
 const Teacher = require("../models/Teacher");
 
 exports.verifyToken = async (req, res, next) => {
@@ -34,4 +34,4 @@ exports.verifyToken = async (req, res, next) => {
     console.error("JWT verification error:", error);
     return res.status(401).json({ message: "Invalid access token" });
   }
-}
+};
