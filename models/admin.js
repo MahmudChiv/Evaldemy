@@ -2,6 +2,10 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
 const Admin = sequelize.define("Admin", {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+    },
     schoolId: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -22,14 +26,14 @@ const Admin = sequelize.define("Admin", {
         allowNull: false,
         unique: true,
         validate: {
-        isEmail: true,
+            isEmail: true, // Must be a valid email format
         },
     },
     adminPhone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         validate: {
-            is: /^\+?[1-9]\d{1,14}$/, // Validates international phone numbers
+            is: /^[0-9]+$/, // Phone must contain only numbers
         },
     },
     adminPassword: {
@@ -40,5 +44,13 @@ const Admin = sequelize.define("Admin", {
         },
     },
 });
+
+// Associations
+Admin.associate = (models) => {
+    Admin.belongsTo(models.School, {
+        foreignKey: "schoolId",
+        as: "school",
+    });
+};
 
 module.exports = Admin;

@@ -1,14 +1,42 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
+const multer = require("multer");
+const { verifyToken } = require("../middleware/verifyToken");
+const upload = multer({ dest: "uploads/" });
 
 // Register school route
-router.post("/registerSchool", authController.registerSchool );
+router.post("/school", authController.registerSchool);
 
 // Register Admin route
-router.post("/registerAdmin", authController.registerAdmin );
+router.post("/admin", authController.registerAdmin);
+
+// Admin Login route
+router.post("/admin/login", authController.handleAdminLogin);
 
 // Register Teachers route
-router.post("/addTeachers", upload.single("teachersFile"), authController.addTeachers );
+router.post(
+  "/admin/inviteTeachers",
+  verifyToken,
+  upload.single("teachersFile"),
+  authController.inviteTeachers
+);
 
-module.exports = router; 
+// Login route
+router.post("/login", authController.handleLogin);
+
+// Teacher account setup route
+router.put("/teacher/Setup", verifyToken, authController.updateTeacherInfo);
+
+// Teacher account setup route
+router.post("/teacher/subjectSetup", verifyToken, authController.teacherSubjectSetup);
+
+// Add Students route
+router.post(
+  "/addStudents",
+  verifyToken,
+  upload.single("studentsFile"),
+  authController.addStudents
+);
+
+module.exports = router;
